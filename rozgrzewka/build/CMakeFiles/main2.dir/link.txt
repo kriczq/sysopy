@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/cc  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/main2.dir/src/main.c.o  -o main2 lib/lib_static.a 

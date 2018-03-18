@@ -1,0 +1,11 @@
+/Users/kriczq/sysopy/build/CMakeFiles/static.dir
+/Users/kriczq/sysopy/build/CMakeFiles/edit_cache.dir
+/Users/kriczq/sysopy/build/CMakeFiles/dynamic.dir
+/Users/kriczq/sysopy/build/CMakeFiles/shared.dir
+/Users/kriczq/sysopy/build/CMakeFiles/rebuild_cache.dir
+/Users/kriczq/sysopy/build/CMakeFiles/mylib.dir
+/Users/kriczq/sysopy/build/lib/CMakeFiles/rebuild_cache.dir
+/Users/kriczq/sysopy/build/lib/CMakeFiles/edit_cache.dir
+/Users/kriczq/sysopy/build/lib/CMakeFiles/_static.dir
+/Users/kriczq/sysopy/build/lib/CMakeFiles/_shared.dir
+/Users/kriczq/sysopy/build/lib/CMakeFiles/objlib.dir
