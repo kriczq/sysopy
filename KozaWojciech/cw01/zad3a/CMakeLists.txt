@@ -64,13 +64,3 @@ foreach(lib_type ${test_lib_types})
     set(build_with "cmake -DLIB_TYPE=${lib_type} -DLIB_STATIC=ON ..")
     add_test(NAME test_${lib_type}_static_allocation COMMAND sh -c "echo \"${build_with}\n\" >> ${test_output} && ${build_with} && make && ${run_command} >> ${test_output} && sleep 0.2")
 endforeach(lib_type ${test_lib_types})
-
-set(test_output "../test/results3b.txt")
-set(test_opt_lvl "O0" "O2" "Os")
-
-foreach(opt ${test_opt_lvl})
-    foreach(lib_type ${test_lib_types})
-        set(build_with "cmake -DLIB_TYPE=${lib_type} -DLIB_STATIC=OFF -DCMAKE_CXX_FLAGS=\"-${opt}\" ..")
-        add_test(NAME test_${lib_type}_${opt} COMMAND sh -c "echo \"${build_with}\n\" >> ${test_output} && ${build_with} && make && ${run_command} >> ${test_output} && sleep 0.2")
-    endforeach(lib_type ${test_lib_types})
-endforeach(opt ${test_opt_lvl})
