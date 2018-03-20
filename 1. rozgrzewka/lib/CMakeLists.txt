@@ -6,15 +6,15 @@ set(libsrc lib.c)
 set(LIB_STATIC OFF CACHE BOOL "library type")
 
 # this is the "object library" target: compiles the sources only once
-add_library(objlib OBJECT ${libsrc})
+#add_library(objlib OBJECT ${libsrc})
 
 # shared libraries need PIC
-set_property(TARGET ${objlib} PROPERTY POSITION_INDEPENDENT_CODE 1)
-set_property(TARGET ${objlib} PROPERTY C_STANDARD 99) #??
+#set_property(TARGET ${objlib} PROPERTY POSITION_INDEPENDENT_CODE 1)
+#set_property(TARGET ${objlib} PROPERTY C_STANDARD 99) #??
 
 # shared and static libraries built from the same object files
-add_library(_shared SHARED $<TARGET_OBJECTS:objlib>)
-add_library(_static STATIC $<TARGET_OBJECTS:objlib>)
+add_library(_shared SHARED ${libsrc})
+add_library(_static STATIC ${libsrc})
 set_property(TARGET _shared ${objlib} PROPERTY C_STANDARD 99) #??
 set_property(TARGET _static ${objlib} PROPERTY C_STANDARD 99) #??
 
