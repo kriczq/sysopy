@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <string.h>
 #include <getopt.h>
+#include <sys/time.h>
 #include <time.h>
 #include <sys/resource.h>
 #include <dlfcn.h>
