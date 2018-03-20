@@ -15,8 +15,8 @@ set_property(TARGET ${objlib} PROPERTY C_STANDARD 99) #??
 # shared and static libraries built from the same object files
 add_library(_shared SHARED $<TARGET_OBJECTS:objlib>)
 add_library(_static STATIC $<TARGET_OBJECTS:objlib>)
-set_property(_shared ${objlib} PROPERTY C_STANDARD 99) #??
-set_property(_static ${objlib} PROPERTY C_STANDARD 99) #??
+set_property(TARGET _shared ${objlib} PROPERTY C_STANDARD 99) #??
+set_property(TARGET _static ${objlib} PROPERTY C_STANDARD 99) #??
 
 if (LIB_STATIC)
     target_compile_definitions(_shared PUBLIC -DLIB_STATIC)
