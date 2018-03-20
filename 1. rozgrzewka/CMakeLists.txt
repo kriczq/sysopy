@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (HELLO)
 
+set(CMAKE_EXE_LINKER_FLAGS "-ldl")
+
 set(LIB_TYPE "static" CACHE STRING "library type")
 enable_testing()
 
