@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <ftw.h>
+#include <sys/types.h>
 
 
 
