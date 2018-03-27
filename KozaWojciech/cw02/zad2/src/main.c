@@ -270,10 +270,12 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    if (argc == 5 && strcmp(argv[4], "--nftw") == 0)
+    if (argc == 5 && strcmp(argv[4], "--nftw") == 0) {
+        printf("nftw option\n")
         traverse_nftw(absolute_path);
-    else
+    } else {
         traverse(absolute_path);
+    }
 
     return 0;
 }
