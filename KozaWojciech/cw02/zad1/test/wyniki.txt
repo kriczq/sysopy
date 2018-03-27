@@ -1,0 +1,48 @@
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 4 using lib
+real: 435µs user: 168µs system: 258µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 4 using lib
+real: 699µs user: 268µs system: 384µs
+
+sorting file ../res/a.txt, 1000 records of size 4 using sys
+real: 2274191µs user: 680229µs system: 1573132µs
+
+sorting file ../res/b.txt, 1000 records of size 4 using lib
+real: 2552545µs user: 949268µs system: 1583492µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 512 using lib
+real: 945µs user: 216µs system: 722µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 512 using lib
+real: 1239µs user: 267µs system: 947µs
+
+sorting file ../res/a.txt, 1000 records of size 512 using sys
+real: 2545298µs user: 702880µs system: 1779957µs
+
+sorting file ../res/b.txt, 1000 records of size 512 using lib
+real: 5078226µs user: 996956µs system: 4068168µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 4096 using lib
+real: 8439µs user: 981µs system: 7365µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 4096 using lib
+real: 4464µs user: 549µs system: 3906µs
+
+sorting file ../res/a.txt, 1000 records of size 4096 using sys
+real: 2714596µs user: 723484µs system: 1969144µs
+
+sorting file ../res/b.txt, 1000 records of size 4096 using lib
+real: 5642560µs user: 1147422µs system: 4452889µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 8192 using lib
+real: 14720µs user: 1451µs system: 12112µs
+
+copying file ../res/a.txt to file ../res/b.txt, 1000 records of size 8192 using lib
+real: 10158µs user: 1030µs system: 8853µs
+
+sorting file ../res/a.txt, 1000 records of size 8192 using sys
+real: 3228397µs user: 761960µs system: 2442172µs
+
+sorting file ../res/b.txt, 1000 records of size 8192 using lib
+real: 6201573µs user: 1323846µs system: 4846393µs
+

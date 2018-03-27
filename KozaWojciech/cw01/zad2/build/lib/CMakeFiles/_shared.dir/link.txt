@@ -1,1 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/cc  -dynamiclib -Wl,-headerpad_max_install_names  -o lib_shared.so -install_name @rpath/lib_shared.so CMakeFiles/objlib.dir/lib.c.o 

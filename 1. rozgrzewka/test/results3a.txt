@@ -1,0 +1,43 @@
+cmake -DLIB_TYPE=static -DLIB_STATIC=OFF ..
+
+adding in sequence:
+real: 1806µs user: 1769µs system: 29µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1100µs user: 1097µs system: 2µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 33µs user: 32µs system: 0µs
+
+cmake -DLIB_TYPE=shared -DLIB_STATIC=OFF ..
+
+adding in sequence:
+real: 1953µs user: 1911µs system: 31µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1160µs user: 1159µs system: 0µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 36µs user: 36µs system: 1µs
+
+cmake -DLIB_TYPE=dynamic -DLIB_STATIC=OFF ..
+
+dynamiczna blibteka
+adding in sequence:
+real: 2446µs user: 2380µs system: 55µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1300µs user: 1282µs system: 7µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 47µs user: 46µs system: 1µs
+
+cmake -DLIB_TYPE=static -DLIB_STATIC=ON ..
+
+cmake -DLIB_TYPE=shared -DLIB_STATIC=ON ..
+
+cmake -DLIB_TYPE=dynamic -DLIB_STATIC=ON ..
+

@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/kriczq/sysopy/KozaWojciech/cw01/zad2/inc/lib.h
+
+/Users/kriczq/sysopy/KozaWojciech/cw01/zad2/lib/lib.c
+../inc/lib.h
+/Users/kriczq/sysopy/KozaWojciech/cw01/zad2/inc/lib.h
+stdio.h
+/Users/kriczq/sysopy/KozaWojciech/cw01/zad2/lib/stdio.h
+stdlib.h
+-
+limits.h
+-
+string.h
+-
+

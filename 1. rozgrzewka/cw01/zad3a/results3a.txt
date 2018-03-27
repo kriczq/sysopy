@@ -1,0 +1,76 @@
+cmake -DLIB_TYPE=static -DLIB_STATIC=OFF ..
+
+adding in sequence:
+real: 2046µs user: 1756µs system: 117µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1154µs user: 1153µs system: 1µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 36µs user: 35µs system: 1µs
+
+cmake -DLIB_TYPE=shared -DLIB_STATIC=OFF ..
+
+adding in sequence:
+real: 1574µs user: 1501µs system: 51µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1006µs user: 1006µs system: 1µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 31µs user: 31µs system: 1µs
+
+cmake -DLIB_TYPE=dynamic -DLIB_STATIC=OFF ..
+
+dynamiczna blibteka
+adding in sequence:
+real: 1542µs user: 1513µs system: 22µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1002µs user: 1001µs system: 1µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 29µs user: 30µs system: 0µs
+
+cmake -DLIB_TYPE=static -DLIB_STATIC=ON ..
+
+dynamiczna blibteka
+adding in sequence:
+real: 2086µs user: 1910µs system: 163µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1321µs user: 1239µs system: 30µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 38µs user: 38µs system: 1µs
+
+cmake -DLIB_TYPE=shared -DLIB_STATIC=ON ..
+
+dynamiczna blibteka
+adding in sequence:
+real: 1585µs user: 1528µs system: 40µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1257µs user: 1190µs system: 15µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 39µs user: 39µs system: 0µs
+
+cmake -DLIB_TYPE=dynamic -DLIB_STATIC=ON ..
+
+dynamiczna blibteka
+adding in sequence:
+real: 1504µs user: 1479µs system: 18µs
+
+Deleting in sequence:
+delted 898 blocks of 898 requested
+real: 1126µs user: 1048µs system: 32µs
+
+Finding element most similar to fdsafadsfdsfsa: fdsafads
+real: 36µs user: 35µs system: 1µs
+

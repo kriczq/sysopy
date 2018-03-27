@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "lib.h": "c",
-        "limits.h": "c"
+        "limits.h": "c",
+        "resource.h": "c"
     }
 }
