@@ -1,3 +1,7 @@
+#define __USE_XOPEN
+#define _XOPEN_SOURCE
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -13,6 +17,8 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <ftw.h>
+
+
 
 struct tm DATE_CMP;
 int CMP;
