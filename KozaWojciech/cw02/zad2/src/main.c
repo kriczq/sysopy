@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc == 5 && strcmp(argv[4], "--nftw") == 0) {
-        printf("nftw option\n")
+        printf("nftw option\n");
         traverse_nftw(absolute_path);
     } else {
         traverse(absolute_path);
