@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <string.h>
+#include <bsd/string.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <time.h>
