@@ -1,0 +1,3 @@
+/Users/kriczq/sysopy/KozaWojciech/cw02/zad2/build/CMakeFiles/rebuild_cache.dir
+/Users/kriczq/sysopy/KozaWojciech/cw02/zad2/build/CMakeFiles/edit_cache.dir
+/Users/kriczq/sysopy/KozaWojciech/cw02/zad2/build/CMakeFiles/main.dir

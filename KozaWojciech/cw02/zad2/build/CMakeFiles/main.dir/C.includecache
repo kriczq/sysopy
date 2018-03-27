@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/kriczq/sysopy/KozaWojciech/cw02/zad2/src/main.c
+stdio.h
+-
+stdlib.h
+-
+limits.h
+-
+getopt.h
+-
+sys/time.h
+-
+time.h
+-
+sys/resource.h
+-
+dlfcn.h
+-
+memory.h
+-
+stdlib.h
+-
+errno.h
+-
+sys/stat.h
+-
+dirent.h
+-
+ftw.h
+-
+sys/types.h
+-
+
