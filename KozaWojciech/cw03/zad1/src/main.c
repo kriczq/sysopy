@@ -195,7 +195,7 @@ void traverse(char *absolute_path) {
             	traverse(local_path);
                 exit(0);
             } else {
-                //wait(NULL);
+                wait(NULL);
             }
         } else if (entry->d_type == DT_REG) {
             struct stat *buf;
