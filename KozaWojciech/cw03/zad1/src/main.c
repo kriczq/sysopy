@@ -146,13 +146,6 @@ char *convert_time(time_t time, char *buff) {
     return buff;
 }
 
-struct tm convert_to_tm(char *time_details) {
-    struct tm tm;
-
-    strptime(time_details, "%F", &tm);
-    return tm;
-}
-
 int compare_tm(struct tm tm1, struct tm tm2) {
     if (tm1.tm_year < tm2.tm_year)
         return -1;
@@ -236,7 +229,16 @@ int main(int argc, char *argv[]) {
 
     const char *dirpath = argv[1];
     const char *comparator = argv[2];
-    DATE_CMP = convert_to_tm(argv[3]);
+	
+
+	if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &DATE_CMP) == NULL) {
+		fprintf(stderr, "wrong date\n");
+        exit(EXIT_FAILURE);
+	}
+
+	
+
+    //DATE_CMP = convert_to_tm(argv[3]);
 
     if (strcmp(comparator, "<") == 0)
         CMP = -1;
