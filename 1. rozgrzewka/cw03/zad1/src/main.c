@@ -133,36 +133,47 @@ void strmode(mode, p)
 	*p = '\0';
 }
 
+char LOCAL_PATH[256];
+struct tm TIME_ARGS;
+int HOW;
 
-char local_path[256];
-struct tm DATE_CMP;
-int CMP;
+void CHECK(bool is_ok, const char *message) {
+    if (!is_ok) {
+        fprintf(stderr, "Error: %s: %s\n", strerror(errno), message);
+        exit(errno);
+    }
+}
+
+void check_if_exists(const char *dirpath) {
+    struct stat sb;
+
+    if (!(stat(dirpath, &sb) == 0 && S_ISDIR(sb.st_mode))) {
+        fprintf(stderr, "Can't find given directory: %s\n", dirpath);
+        exit(1);
+    }
+}
 
 char *convert_time(time_t time, char *buff) {
     struct tm *timeinfo;
-
     timeinfo = localtime(&time);
     strftime(buff, 20, "%F", timeinfo);
     return buff;
 }
 
+struct tm convert_to_tm(char *time_details) {
+    struct tm tm;
+    strptime(time_details, "%F", &tm);
+    return tm;
+}
+
 int compare_tm(struct tm tm1, struct tm tm2) {
-    if (tm1.tm_year < tm2.tm_year)
-        return -1;
-    if (tm1.tm_year > tm2.tm_year)
-        return 1;
-
-    if (tm1.tm_mon < tm2.tm_mon)
-        return -1;
-    if (tm1.tm_mon > tm2.tm_mon)
-        return 1;
-
-    if (tm1.tm_mday < tm2.tm_mday)
-        return -1;
-    if (tm1.tm_mday > tm2.tm_mday)
-        return 1;
-    else
-        return 0;
+    if (tm1.tm_year < tm2.tm_year) return -1;
+    if (tm1.tm_year > tm2.tm_year) return 1;
+    if (tm1.tm_mon < tm2.tm_mon) return -1;
+    if (tm1.tm_mon > tm2.tm_mon) return 1;
+    if (tm1.tm_mday < tm2.tm_mday) return -1;
+    if (tm1.tm_mday > tm2.tm_mday) return 1;
+    return 0;
 }
 
 void traverse(char *absolute_path) {
@@ -181,27 +192,32 @@ void traverse(char *absolute_path) {
             pid_t pid;
             pid = fork();
 
+            CHECK(pid >= 0, "Error creating process");
+
             if (pid == 0) {
-                snprintf(local_path, sizeof(local_path), "%s/%s", absolute_path, entry->d_name);
-                traverse(local_path);
+                snprintf(LOCAL_PATH, sizeof(LOCAL_PATH), "%s/%s", absolute_path, entry->d_name);
+                traverse(LOCAL_PATH);
                 exit(0);
             } else {
                 int status;
                 wait(&status);
+                if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+                    perror("Something went wrong in child process.\n");
+                }
             }
         } else if (entry->d_type == DT_REG) {
             struct stat *buf;
             buf = malloc(sizeof(struct stat));
-            snprintf(local_path, sizeof(local_path), "%s/%s", absolute_path, entry->d_name);
-            int file_stat = stat(local_path, buf);
+            snprintf(LOCAL_PATH, sizeof(LOCAL_PATH), "%s/%s", absolute_path, entry->d_name);
+            int file_stat = stat(LOCAL_PATH, buf);
             struct tm *time_file = localtime(&buf->st_mtime);
-            if (file_stat == 0 && compare_tm(*time_file, DATE_CMP) == CMP) {
+            if (file_stat == 0 && compare_tm(*time_file, TIME_ARGS) == HOW) {
                 char bits_buff[20];
                 char time_buff[20];
                 mode_t bits = buf->st_mode;
                 strmode(bits, bits_buff);
                 convert_time(buf->st_mtime, time_buff);
-                printf("%s %-10zd %-5s %-5s\n", bits_buff, buf->st_size, time_buff, local_path);
+                printf("%s %-10zd %-5s %-5s\n", bits_buff, buf->st_size, time_buff, LOCAL_PATH);
             }
             free(buf);
         }
@@ -218,7 +234,7 @@ int main(int argc, char *argv[]) {
     const char *dirpath = argv[1];
     const char *comparator = argv[2];
 	
-	char* ret = strptime(argv[3], "%Y-%m-%d", &DATE_CMP);
+	char* ret = strptime(argv[3], "%Y-%m-%d", &TIME_ARGS);
 
 	if (ret == NULL || *ret != '\0') {
 		fprintf(stderr, "wrong date\n");
@@ -227,14 +243,14 @@ int main(int argc, char *argv[]) {
 
 	
 
-    //DATE_CMP = convert_to_tm(argv[3]);
+    //TIME_ARGS = convert_to_tm(argv[3]);
 
     if (strcmp(comparator, "<") == 0)
-        CMP = -1;
+        HOW = -1;
     else if (strcmp(comparator, "=") == 0)
-        CMP = 0;
+        HOW = 0;
     else if (strcmp(comparator, ">") == 0)
-        CMP = 1;
+        HOW = 1;
     else {
         fprintf(stderr, "comparator can be < = > only");
         exit(EXIT_FAILURE);
