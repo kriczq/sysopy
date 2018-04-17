@@ -134,7 +134,7 @@ void strmode(mode, p)
 }
 
 
-
+char local_path[256];
 struct tm DATE_CMP;
 int CMP;
 
@@ -165,59 +165,47 @@ int compare_tm(struct tm tm1, struct tm tm2) {
         return 0;
 }
 
-
 void traverse(char *absolute_path) {
     DIR *dir = opendir(absolute_path);
 
     if (dir == NULL) {
-        fprintf(stderr, "failed to open dir");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     struct dirent *entry;
-
     while ((entry = readdir(dir)) != NULL) {
-        char local_path[PATH_MAX];
-
         if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
                 continue;
-            
-			pid_t pid = fork();
-
-			if (pid < 0) {
-				fprintf(stderr, "error creating process");
-        		exit(EXIT_FAILURE);
-			}
+            }
+            pid_t pid;
+            pid = fork();
 
             if (pid == 0) {
                 snprintf(local_path, sizeof(local_path), "%s/%s", absolute_path, entry->d_name);
-            	traverse(local_path);
+                traverse(local_path);
                 exit(0);
             } else {
-                wait(NULL);
+                int status;
+                wait(&status);
             }
         } else if (entry->d_type == DT_REG) {
             struct stat *buf;
             buf = malloc(sizeof(struct stat));
-
             snprintf(local_path, sizeof(local_path), "%s/%s", absolute_path, entry->d_name);
-
+            int file_stat = stat(local_path, buf);
             struct tm *time_file = localtime(&buf->st_mtime);
-
-            if (stat(local_path, buf) == 0 && compare_tm(*time_file, DATE_CMP) == CMP) {
-                char bits_buff[20], time_buff[20];
+            if (file_stat == 0 && compare_tm(*time_file, DATE_CMP) == CMP) {
+                char bits_buff[20];
+                char time_buff[20];
                 mode_t bits = buf->st_mode;
-
                 strmode(bits, bits_buff);
                 convert_time(buf->st_mtime, time_buff);
                 printf("%s %-10zd %-5s %-5s\n", bits_buff, buf->st_size, time_buff, local_path);
             }
-
             free(buf);
         }
     }
-
     closedir(dir);
 }
 
@@ -230,8 +218,9 @@ int main(int argc, char *argv[]) {
     const char *dirpath = argv[1];
     const char *comparator = argv[2];
 	
+	char* ret = strptime(argv[3], "%Y-%m-%d", &DATE_CMP);
 
-	if (strptime(argv[3], "%Y-%m-%d %H:%M:%S", &DATE_CMP) == NULL) {
+	if (ret == NULL || *ret != '\0') {
 		fprintf(stderr, "wrong date\n");
         exit(EXIT_FAILURE);
 	}
