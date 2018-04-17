@@ -69,8 +69,7 @@ int date_compare (char* date, char direction, time_t fileTime) {
 
     struct tm* parsedDate = (struct tm*) malloc(sizeof(struct tm));
 
-    char* ret = strptime(date, "%Y-%m-%d", parsedDate);
-    if(ret == NULL || *ret != '\0')
+    if(strptime(date, "%Y-%m-%d %H:%M:%S", parsedDate) == NULL)
         exit(EXIT_FAILURE);
 
     time_t parsedTime = mktime(parsedDate);
