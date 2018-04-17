@@ -69,7 +69,7 @@ int date_compare (char* date, char direction, time_t fileTime) {
 
     struct tm* parsedDate = (struct tm*) malloc(sizeof(struct tm));
 
-    ret = strptime(date, "%Y-%m-%d", parsedDate);
+    char* ret = strptime(date, "%Y-%m-%d", parsedDate);
     if(ret == NULL || *ret != '\0') {
     	printf("wrong date\n");
         exit(EXIT_FAILURE);
