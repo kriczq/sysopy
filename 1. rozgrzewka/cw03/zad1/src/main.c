@@ -2,269 +2,166 @@
 #define _XOPEN_SOURCE
 #define _GNU_SOURCE
 
+#include <stdlib.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <sys/time.h>
-#include <time.h>
-#include <dlfcn.h>
-#include <memory.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <dirent.h>
+#include <string.h>
 #include <ftw.h>
-#include <sys/types.h>
-#include <memory.h>
-#include <unistd.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <math.h>
+#include <dirent.h>
+#include <time.h>
+
+#define NOOPENFD 1024
+#define PATH_MAX 1024
+
+struct parsedArgs {
+    char* path;
+    char direction;
+    char* date;
+};
+
+struct parsedArgs globalVar;
+#define SGVBB globalVar
+
+struct parsedArgs parser (int argc, char* argv[]) {
+    if(argc < 3)
+        exit(EXIT_FAILURE);
+    struct parsedArgs args;
+
+    args.path = argv[1];
+    args.direction = *argv[2];
+    args.date = argv[3];
+
+    return args;
+}
+
+char* get_permissions(const struct stat* filestat) {
+
+    char* permissions = (char*) malloc(sizeof(char) * 11);
+    permissions[0] = S_ISDIR(filestat -> st_mode) ? 'd' : '-';
+    permissions[1] = (filestat -> st_mode & S_IRUSR) ? 'r' : '-';
+    permissions[2] = (filestat -> st_mode & S_IWUSR) ? 'w' : '-';
+    permissions[3] = (filestat -> st_mode & S_IXUSR) ? 'x' : '-';
+    permissions[4] = (filestat -> st_mode & S_IRGRP) ? 'r' : '-';
+    permissions[5] = (filestat -> st_mode & S_IWGRP) ? 'w' : '-';
+    permissions[6] = (filestat -> st_mode & S_IXGRP) ? 'x' : '-';
+    permissions[7] = (filestat -> st_mode & S_IROTH) ? 'r' : '-';
+    permissions[8] = (filestat -> st_mode & S_IWOTH) ? 'w' : '-';
+    permissions[9] = (filestat -> st_mode & S_IXOTH) ? 'x' : '-';
+    permissions[10] = '\0';
+    return permissions;
+}
 
 
-void strmode(mode, p)
-	register mode_t mode;
-	register char *p;
-{
-	 /* print type */
-	switch (mode & S_IFMT) {
-	case S_IFDIR:			/* directory */
-		*p++ = 'd';
-		break;
-	case S_IFCHR:			/* character special */
-		*p++ = 'c';
-		break;
-	case S_IFBLK:			/* block special */
-		*p++ = 'b';
-		break;
-	case S_IFREG:			/* regular */
-		*p++ = '-';
-		break;
-	case S_IFLNK:			/* symbolic link */
-		*p++ = 'l';
-		break;
-	case S_IFSOCK:			/* socket */
-		*p++ = 's';
-		break;
-#ifdef S_IFIFO
-	case S_IFIFO:			/* fifo */
-		*p++ = 'p';
-		break;
-#endif
-#ifdef S_IFWHT
-	case S_IFWHT:			/* whiteout */
-		*p++ = 'w';
-		break;
-#endif
-	default:			/* unknown */
-		*p++ = '?';
-		break;
+void print_file_info(const struct stat* statBuffer,const char* absPath) {
+
+    char* permissions =  (char*) get_permissions(statBuffer);
+
+    printf("%-80s%-12lld%-8s      %-16s",
+           absPath,
+           (long long int) statBuffer->st_size,
+           permissions,
+           ctime(&(statBuffer->st_mtime))
+    );
+    free(permissions);
+}
+
+
+int date_compare (char* date, char direction, time_t fileTime) {
+
+    struct tm* parsedDate = (struct tm*) malloc(sizeof(struct tm));
+
+    char* ret = strptime(date, "%Y-%m-%d", parsedDate);
+    if(ret == NULL || *ret != '\0') {
+		printf("wrong date\n");
+		exit(EXIT_FAILURE);
 	}
-	/* usr */
-	if (mode & S_IRUSR)
-		*p++ = 'r';
-	else
-		*p++ = '-';
-	if (mode & S_IWUSR)
-		*p++ = 'w';
-	else
-		*p++ = '-';
-	switch (mode & (S_IXUSR | S_ISUID)) {
-	case 0:
-		*p++ = '-';
-		break;
-	case S_IXUSR:
-		*p++ = 'x';
-		break;
-	case S_ISUID:
-		*p++ = 'S';
-		break;
-	case S_IXUSR | S_ISUID:
-		*p++ = 's';
-		break;
-	}
-	/* group */
-	if (mode & S_IRGRP)
-		*p++ = 'r';
-	else
-		*p++ = '-';
-	if (mode & S_IWGRP)
-		*p++ = 'w';
-	else
-		*p++ = '-';
-	switch (mode & (S_IXGRP | S_ISGID)) {
-	case 0:
-		*p++ = '-';
-		break;
-	case S_IXGRP:
-		*p++ = 'x';
-		break;
-	case S_ISGID:
-		*p++ = 'S';
-		break;
-	case S_IXGRP | S_ISGID:
-		*p++ = 's';
-		break;
-	}
-	/* other */
-	if (mode & S_IROTH)
-		*p++ = 'r';
-	else
-		*p++ = '-';
-	if (mode & S_IWOTH)
-		*p++ = 'w';
-	else
-		*p++ = '-';
-	switch (mode & (S_IXOTH | S_ISVTX)) {
-	case 0:
-		*p++ = '-';
-		break;
-	case S_IXOTH:
-		*p++ = 'x';
-		break;
-	case S_ISVTX:
-		*p++ = 'T';
-		break;
-	case S_IXOTH | S_ISVTX:
-		*p++ = 't';
-		break;
-	}
-	*p++ = ' ';		/* will be a '+' if ACL's implemented */
-	*p = '\0';
+        
+
+    time_t parsedTime = mktime(parsedDate);
+
+    if(direction == '='){
+        return fabs(difftime(parsedTime, fileTime)) < 0.001 ? 1 : 0;
+    } else if(direction == '>')
+    {
+        return difftime(parsedTime, fileTime) > 0 ? 1 : 0;
+    } else if(direction == '<')
+    {
+        return difftime(parsedTime, fileTime) < 0 ? 1 : 0;
+    } else
+        exit(EXIT_FAILURE);
 }
 
-char LOCAL_PATH[256];
-struct tm TIME_ARGS;
-int HOW;
 
-void CHECK(bool is_ok, const char *message) {
-    if (!is_ok) {
-        fprintf(stderr, "Error: %s: %s\n", strerror(errno), message);
-        exit(errno);
-    }
-}
 
-void check_if_exists(const char *dirpath) {
-    struct stat sb;
+void process_file_structure( char* path, char direction,char* date) {
 
-    if (!(stat(dirpath, &sb) == 0 && S_ISDIR(sb.st_mode))) {
-        fprintf(stderr, "Can't find given directory: %s\n", dirpath);
-        exit(1);
-    }
-}
+           DIR* handle = opendir(path);
+           struct dirent* currentDir = readdir(handle);
 
-char *convert_time(time_t time, char *buff) {
-    struct tm *timeinfo;
-    timeinfo = localtime(&time);
-    strftime(buff, 20, "%F", timeinfo);
-    return buff;
-}
+           while(currentDir != NULL) {
 
-struct tm convert_to_tm(char *time_details) {
-    struct tm tm;
-    strptime(time_details, "%F", &tm);
-    return tm;
-}
+               if (strcmp(currentDir -> d_name, ".") == 0 || strcmp(currentDir -> d_name, "..") == 0) {
+                   currentDir = readdir(handle);
+               } else 
 
-int compare_tm(struct tm tm1, struct tm tm2) {
-    if (tm1.tm_year < tm2.tm_year) return -1;
-    if (tm1.tm_year > tm2.tm_year) return 1;
-    if (tm1.tm_mon < tm2.tm_mon) return -1;
-    if (tm1.tm_mon > tm2.tm_mon) return 1;
-    if (tm1.tm_mday < tm2.tm_mday) return -1;
-    if (tm1.tm_mday > tm2.tm_mday) return 1;
-    return 0;
-}
+               {
 
-void traverse(char *absolute_path) {
-    DIR *dir = opendir(absolute_path);
+               char* currentDirPath = (char*) calloc(PATH_MAX, sizeof(char));
+               strcat(strcat(strcat(currentDirPath, path),"/"), currentDir->d_name);
 
-    if (dir == NULL) {
-        return;
-    }
+               if(currentDir -> d_type == DT_DIR) {
+                   process_file_structure(currentDirPath, direction, date);
+               }
 
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-                continue;
+               
+               else if(currentDir -> d_type == DT_REG) {
+
+
+                    struct stat* statBuffer = (struct stat*) malloc(sizeof(struct stat));
+
+
+                    if(stat(currentDirPath, statBuffer) != -1)
+                    if(date_compare(date, direction, statBuffer -> st_mtime)) {
+                       print_file_info(statBuffer, currentDirPath);
+
+                   }
+               }
+
+               currentDir = readdir(handle);
+
+               }
+       }
+ }
+
+ int fn (const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+
+                if (typeflag == FTW_F && date_compare(SGVBB.date, SGVBB.direction, sb -> st_mtime))
+                       print_file_info(sb, fpath);
+                return 0;
             }
-            pid_t pid;
-            pid = fork();
 
-            CHECK(pid >= 0, "Error creating process");
 
-            if (pid == 0) {
-                snprintf(LOCAL_PATH, sizeof(LOCAL_PATH), "%s/%s", absolute_path, entry->d_name);
-                traverse(LOCAL_PATH);
-                exit(0);
-            } else {
-                int status;
-                wait(&status);
-                if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-                    perror("Something went wrong in child process.\n");
-                }
-            }
-        } else if (entry->d_type == DT_REG) {
-            struct stat *buf;
-            buf = malloc(sizeof(struct stat));
-            snprintf(LOCAL_PATH, sizeof(LOCAL_PATH), "%s/%s", absolute_path, entry->d_name);
-            int file_stat = stat(LOCAL_PATH, buf);
-            struct tm *time_file = localtime(&buf->st_mtime);
-            if (file_stat == 0 && compare_tm(*time_file, TIME_ARGS) == HOW) {
-                char bits_buff[20];
-                char time_buff[20];
-                mode_t bits = buf->st_mode;
-                strmode(bits, bits_buff);
-                convert_time(buf->st_mtime, time_buff);
-                printf("%s %-10zd %-5s %-5s\n", bits_buff, buf->st_size, time_buff, LOCAL_PATH);
-            }
-            free(buf);
-        }
+int main( int argc, char* argv[] ) {
+
+    struct parsedArgs args = parser(argc, argv);
+
+    DIR *check = opendir(argv[1]);
+    if (check == 0) {
+        printf("Cannot open a directory.\n");
+        return EXIT_FAILURE;
     }
-    closedir(dir);
-}
+    closedir(check);
 
-int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        fprintf(stderr, "too few arguments");
-        exit(EXIT_FAILURE);
+
+    if(!(args.direction == '=' || args.direction == '>' || args.direction == '<')) {
+        printf("Wrong comparator \n");
+        return EXIT_FAILURE;
     }
+    #ifdef NFTW
+        SGVBB = parser(argc, argv);
+        nftw(SGVBB.path, fn, NOOPENFD, FTW_PHYS);
+    #else
+        process_file_structure(args.path, args.direction, args.date);
+    #endif
 
-    const char *dirpath = argv[1];
-    const char *comparator = argv[2];
-	
-	char* ret = strptime(argv[3], "%Y-%m-%d", &TIME_ARGS);
-
-	if (ret == NULL || *ret != '\0') {
-		fprintf(stderr, "wrong date\n");
-        exit(EXIT_FAILURE);
-	}
-
-	
-
-    //TIME_ARGS = convert_to_tm(argv[3]);
-
-    if (strcmp(comparator, "<") == 0)
-        HOW = -1;
-    else if (strcmp(comparator, "=") == 0)
-        HOW = 0;
-    else if (strcmp(comparator, ">") == 0)
-        HOW = 1;
-    else {
-        fprintf(stderr, "comparator can be < = > only");
-        exit(EXIT_FAILURE);
-    }
-
-    struct stat sb;
-    char absolute_path[PATH_MAX + 1];
-
-    if (!(stat(dirpath, &sb) == 0 && S_ISDIR(sb.st_mode) && realpath(dirpath, absolute_path) != NULL)) {
-        fprintf(stderr, "cant find directory: %s", dirpath);
-        exit(EXIT_FAILURE);
-    }
-
-	traverse(absolute_path);
-
-    return 0;
 }
