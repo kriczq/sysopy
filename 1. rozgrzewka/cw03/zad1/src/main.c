@@ -11,7 +11,6 @@
 #include <time.h>
 
 #define NOOPENFD 1024
-#define PATH_MAX 1024
 
 struct parsedArgs {
     char* path;
@@ -71,11 +70,8 @@ int date_compare (char* date, char direction, time_t fileTime) {
     struct tm* parsedDate = (struct tm*) malloc(sizeof(struct tm));
 
     char* ret = strptime(date, "%Y-%m-%d", parsedDate);
-    if(ret == NULL || *ret != '\0') {
-		printf("wrong date\n");
-		exit(EXIT_FAILURE);
-	}
-        
+    if(ret == NULL || *ret != '\0')
+        exit(EXIT_FAILURE);
 
     time_t parsedTime = mktime(parsedDate);
 
@@ -145,7 +141,7 @@ int main( int argc, char* argv[] ) {
 
     struct parsedArgs args = parser(argc, argv);
 
-    DIR *check = opendir(argv[1]);
+    DIR *check = opendir(argv[1]); //check if directiory is good
     if (check == 0) {
         printf("Cannot open a directory.\n");
         return EXIT_FAILURE;
@@ -154,7 +150,7 @@ int main( int argc, char* argv[] ) {
 
 
     if(!(args.direction == '=' || args.direction == '>' || args.direction == '<')) {
-        printf("Wrong comparator \n");
+        printf("Wrong second argument \n");
         return EXIT_FAILURE;
     }
     #ifdef NFTW
