@@ -69,17 +69,21 @@ int date_compare (char* date, char direction, time_t fileTime) {
 
     struct tm* parsedDate = (struct tm*) malloc(sizeof(struct tm));
 
-    if(strptime(date, "%Y-%m-%d %H:%M:%S", parsedDate) == NULL)
+    ret = strptime(date, "%Y-%m-%d", parsedDate);
+    if(ret == NULL || *ret != '\0') {
+    	printf("wrong date\n");
         exit(EXIT_FAILURE);
+
+    }
 
     time_t parsedTime = mktime(parsedDate);
 
     if(direction == '='){
         return fabs(difftime(parsedTime, fileTime)) < 0.001 ? 1 : 0;
-    } else if(direction == '>')
+    } else if(direction == '<')
     {
         return difftime(parsedTime, fileTime) > 0 ? 1 : 0;
-    } else if(direction == '<')
+    } else if(direction == '>')
     {
         return difftime(parsedTime, fileTime) < 0 ? 1 : 0;
     } else
