@@ -11,8 +11,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <signal.h>
-
-#include "communication.h"
+#include "parameters.h"
 
 #define FAILURE_EXIT(format, ...) { fprintf(stderr, format, ##__VA_ARGS__); exit(-1); }
 
@@ -33,8 +32,6 @@ int active = 1;
 int clients_data[MAX_CLIENTS][2];
 int client_count = 0;
 mqd_t queue_descriptor = -1;
-
-// MAIN ////////////////////////////////////////////////////////////////////////
 
 int main() {
     if (atexit(close_queue) == -1)
@@ -91,8 +88,6 @@ void handle_public_queue(struct Message *msg) {
             break;
     }
 }
-
-// HANDLERS ////////////////////////////////////////////////////////////////////
 
 void do_login(struct Message *msg) {
     int clientPID = msg->sender_pid;
@@ -186,8 +181,6 @@ void do_quit(struct Message *msg) {
     client_count--;
     printf("server: cleared data of removed client\n");
 }
-
-// HELPERS /////////////////////////////////////////////////////////////////////
 
 int prepare_msg(struct Message *msg) {
     int client_queue_id  = find_queue_id(msg->sender_pid);

@@ -11,8 +11,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <signal.h>
-
-#include "communication.h"
+#include "parameters.h"
 
 #define FAILURE_EXIT(format, ...) { fprintf(stderr, format, ##__VA_ARGS__); exit(-1); }
 
@@ -98,8 +97,6 @@ void register_client() {
     printf("client: client registered! My session nr is %d\n", sessionID);
 }
 
-// HANDLERS ////////////////////////////////////////////////////////////////////
-
 void request_mirror(struct Message *msg){
     msg->mtype = MIRROR;
     printf("client: enter string of characters to mirror: ");
@@ -153,8 +150,6 @@ void request_quit(struct Message *msg) {
         printf("client: END request failed - server may have already been closed\n");
     fflush(stdout);
 }
-
-// HELPERS /////////////////////////////////////////////////////////////////////
 
 void close_queue() {
     if (privateID > -1) {

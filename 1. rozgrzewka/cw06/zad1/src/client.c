@@ -11,8 +11,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <signal.h>
-
-#include "communication.h"
+#include "parameters.h"
 
 #define FAILURE_EXIT(format, ...) { fprintf(stderr, format, ##__VA_ARGS__); exit(-1); }
 
@@ -28,8 +27,6 @@ void int_handler(int);
 int sessionID = -2;
 int queue_descriptor = -1;
 int privateID = -1;
-
-// MAIN ////////////////////////////////////////////////////////////////////////
 
 int main() {
     if(atexit(close_queue) == -1)
@@ -57,6 +54,7 @@ int main() {
     Message msg;
     while(1) {
         msg.sender_pid = getpid();
+
         printf("client: enter your request: ");
         if (fgets(cmd, 20, stdin) == NULL){
             printf("client: error reading your command\n");
@@ -99,8 +97,6 @@ void register_client(key_t privateKey) {
 
     printf("client: client registered. Session no: %d\n", sessionID);
 }
-
-// HANDLERS ////////////////////////////////////////////////////////////////////
 
 void request_mirror(Message *msg) {
     msg->mtype = MIRROR;
@@ -146,8 +142,6 @@ void request_end(Message *msg) {
     if(msgsnd(queue_descriptor, msg, MSG_SIZE, 0) == -1)
         FAILURE_EXIT("client: END request failed");
 }
-
-// HELPERS /////////////////////////////////////////////////////////////////////
 
 int create_queue(char *path, int ID) {
     int key = ftok(path, ID);

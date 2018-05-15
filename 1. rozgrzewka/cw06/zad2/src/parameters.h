@@ -1,6 +1,3 @@
-#ifndef COMMUNICATION_H
-#define COMMUNICATION_H
-
 #define MAX_CLIENTS  10
 #define PROJECT_ID 0x099
 #define MAX_CONT_SIZE 4096
@@ -17,6 +14,5 @@ typedef struct Message {
     char message_text[MAX_CONT_SIZE];
 } Message;
 
-const char server_path[] = "/server";
 
-#endif
+const char server_path[] = "/server";
