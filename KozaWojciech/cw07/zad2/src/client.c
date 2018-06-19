@@ -1,123 +1,165 @@
 #define _GNU_SOURCE
-#include <sys/msg.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <unistd.h>
-#include <sys/shm.h>
-#include <stddef.h>
 #include <stdio.h>
-#include <sys/wait.h>
+#include <stdlib.h>
 #include <time.h>
-#include <sys/mman.h>
-#include <fcntl.h>
+#include <signal.h>
 #include <semaphore.h>
-#include "common.h"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
-sem_t* semaphore;
-int shared_mem_id;
+int N;
+int *data;
+sem_t *sem1;
+sem_t *sem2;
+sem_t *sem3;
+int fd;
+char buffer[128];
 
-void queue_add(pid_t client, Barbershop *barbershop) {
-    barbershop->queue_tail = barbershop->queue_tail % MAX_NR_CLIENTS;
-    barbershop->queue[barbershop->queue_tail] = client;
-    barbershop->queue_tail++;
-    barbershop->clients_waiting++;
+#define GREEN   "\x1B[32m"
+#define YELLOW  "\x1B[33m"
+#define BLUE    "\x1B[34m"
+#define MAG     "\x1B[35m"
+#define CYN     "\x1B[36m"
+#define RESET   "\x1B[0m"
+
+char *gettime(char buffer[128]) {
+    struct timespec time;
+    clock_gettime(CLOCK_MONOTONIC, &time);
+    sprintf(buffer, "%d:%li",(int)time.tv_sec, time.tv_nsec);
+    return buffer;
 }
 
-int sem_getval(int sem_id) {
-    return semctl(sem_id, 0, GETVAL, 0);
-}
-
-void run(int nr_clients, int nr_trimming, Barbershop *barbershop, sem_t *sem) {
-    int pid = -1;
-    for (int i = 0; i < nr_clients; i++) {
-        pid = fork();
-        if (pid == 0) break;
+void init() {
+    sem1 = sem_open("/sem1", O_RDWR);
+    sem2 = sem_open("/sem2", O_RDWR);
+    sem3 = sem_open("/sem3", O_RDWR);
+    if(sem1 == SEM_FAILED || sem2 == SEM_FAILED || sem3 == SEM_FAILED) {
+        printf("Cannot access semaphores\n");
+        exit(1);
     }
 
-    char buffer[DATE_SIZE];
+    fd = shm_open("/sharmem", O_RDWR, 0);
+    if (fd == -1) {
+        printf("Cannot access shared memory\n");
+        exit(1);
+    }
+
+    data = (int *)mmap(NULL, (N+4)*sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);   //przypisanie pamięci współdzielonej do wskaźnika data
+    if (data == (int *)(-1)) {
+        printf("Problem with connecting to shared memory\n");
+        exit(1);
+    }
+
+    for (int i = 0;; ++i) {   //przeszukuje data dopóki nie znajdzie czegoś innego niż 0 - czyli ilości krzeseł w poczekalni
+        if(data[i] != 0) {    //można w bardziej przejrzysty sposób ale nie chciałem zmieniać
+            N = data[i];
+            break;
+        }
+    }
+}
+
+int sprawdzCzySpi() {
+    sem_wait(sem2);     //uzyskanie dostępu do stanu golibrody i poczekalni
+    sem_wait(sem1);
+    //printf(MAG "[%s][Client #%d] I check the barber.\n" RESET, gettime(buffer), getpid());
     
-    if (pid == 0) {
-        while (nr_trimming) {
-            enum client_status my_status = NONE;
-            // when i enter
-            sem_take(sem);
-            switch (barbershop->barber_status) {
-                case SLEEPING:
-                    printf(GREEN "[%s][Client #%d] Let's wake up a barber! \n" RESET, gettime(buffer), getpid());
-                    barbershop->barber_status = AWOKEN;
-                    barbershop->current_client = getpid();
-                    my_status = WAITING;
-                    break;
-                case FREE:
-                case AWOKEN:
-                case BUSY:
-                    if (barbershop->clients_waiting < barbershop->nr_seats) {
-                        printf(BLUE "[%s][Client #%d] Waiting in queue.\n" RESET, gettime(buffer), getpid());
-                        queue_add(getpid(), barbershop);
-                        my_status = WAITING;
-                    } else {
-                        printf(BLUE "[%s][Client #%d] No more free space. I leave.\n" RESET, gettime(buffer), getpid());
-                        sem_give(sem);
-                        exit(0);
-                    }
-                    break;
-                default:
-                    break;
-            }
-            sem_give(sem);
+    return data[N+3];
+}
 
-            if (my_status == WAITING) {
+void obudzGolibrod() {
+    //jeśli tak, budzę go
+    sem_wait(sem3);   //uzyskuję dostęp do fotela
+printf(GREEN "[%s][Client #%d] Let's wake up a barber! \n" RESET, gettime(buffer), getpid());
+    data[N+3] = 0;          //flaga stanu na obudzonego
+    
+    sem_post(sem2);
+    sem_post(sem1);   //oddanie dostępu do stanu golibrody i do poczekalni
+}
 
-                while (my_status == WAITING) {
-                    sem_take(sem);
-                    if (barbershop->current_client == getpid()) {
-                        my_status = INVITED;
-                        barbershop->current_client_status = SITTING;
-                        printf(GREEN "[%s][Client #%d] I was invited.\n" RESET, gettime(buffer), getpid());
-                    }
-                    sem_give(sem);
-                }
-
-                while (my_status == INVITED) {
-                    sem_take(sem);
-                    if (barbershop->current_client != getpid()) {
-                        my_status = NONE;
-                        printf(MAG "[%s][Client #%d] I was shaved. Haircut left: [%d]\n" RESET, gettime(buffer), getpid(), --nr_trimming);
-                    }
-                    sem_give(sem);
-                }
-            }
-        }
+void ostrzyzSie(int version) {
+    printf(GREEN "[%s][Client #%d] I was invited.\n" RESET, gettime(buffer), getpid());
+    if (version == 0) {
+        data[0] = (int)getpid(); //siada na fotelu
+        
+        sem_post(sem3);   //zwolnienie dostępu do fotela
+    } else {
+        
     }
+    while(data[0] != 0) {}   //czeka aż zostanie ostrzyżony
+    data[N+4] = 1;           //wysyła potwierdzenie
+    printf(MAG "[%s][Client #%d] I was shaved.\n" RESET, gettime(buffer), getpid());
+}
 
-    //parent
-    if (pid > 0) {
-        for (int i = 0; i < nr_clients; i++) {
-            wait(NULL);
+void wyjdz() {
+    printf(BLUE "[%s][Client #%d] I leave.\n" RESET, gettime(buffer), getpid());
+}
+
+int idzDoPoczekalni() {
+    sem_post(sem2);    //zwolnienie dostępu do stanu golibrody
+    if(data[N+2] < data[N+1]) {   //czy jest miejsce w poczekalni
+        //jeśli tak
+        data[1+data[N+2]] = (int)getpid();  //ustawia się na pierwsze wolne miejsce
+        data[N+2]++;
+        printf(BLUE "[%s][Client #%d] Waiting in queue.\n" RESET, gettime(buffer), getpid());
+        sem_post(sem1);     //zwolnienie dostęp do kolejki
+        int pid = (int)getpid();
+        while(data[0] != pid) {}  //czeka, dopóki nie zostaniesz poproszony przez golibrodę
+        data[N+4] = 1;            //ustawia flagę zrozumienia
+        return 0;
+    } else {
+        sem_post(sem1);    //zwolnienie dostępu do kolejki
+        printf(BLUE "[%s][Client #%d] No place. I leave.\n" RESET, gettime(buffer), getpid());
+        return -1;
+    }
+}
+
+void wejdzDoSalonu() {
+    if(sprawdzCzySpi() == 1) {
+        obudzGolibrod();
+        ostrzyzSie(0);
+        wyjdz();
+    } else {
+        if (idzDoPoczekalni() == 0) {
+            ostrzyzSie(1);
+            wyjdz();
         }
     }
 }
 
-int main(int argc, char **argv) {
-    check_exit(argc < 3, "Two arguments expected");
+int main(int argc, char *argv[]) {
+    if(argc != 3) {
+        printf("Wrong number of arguments\n");
+        exit(1);
+    }
 
-    int nr_clients = to_int(argv[1]);
-    int nr_trimming = to_int(argv[2]);
-    check_exit(nr_clients < 0 || nr_trimming < 0, "Can't parse arguments");
+    int numOfProcesses = (int)strtol(argv[1], NULL, 10);
+    int numOfLoops = (int)strtol(argv[2], NULL, 10);
 
-    //open shared memory
-    shared_mem_id = shm_open(SHM_PATH, O_RDWR, S_IRWXU);
-    check_exit(shared_mem_id == -1, "Can't create shared memory");
-    ftruncate(shared_mem_id, sizeof(struct Barbershop));
-    Barbershop *barber_shop;
-    barber_shop = mmap(NULL, sizeof(struct Barbershop), PROT_READ | PROT_WRITE, MAP_SHARED, shared_mem_id, 0);
-    check_exit(barber_shop == (void *) -1, "Can't access shared memory");
+    init();
 
-    //open semaphore
-    semaphore = sem_open(SEM_PATH, 0);
-    check_exit(semaphore == (sem_t*) -1, "Can't create semaphore");
+    for (int i = 0; i < numOfProcesses; ++i) {
+        pid_t child = fork();
+        if(child == 0) {
+            for (int j = 0; j < numOfLoops; ++j) {
+                wejdzDoSalonu();
+            }
+            if(munmap(data, (N+4)*sizeof(int)) == -1) {
+                printf("Cannot detach shared memory\n");
+            }
+            exit(0);
+        } else continue;
+    }
 
-    run(nr_clients, nr_trimming, barber_shop, semaphore);
+    for (int k = 0; k < numOfProcesses; ++k) {  //czeka aż wszystkie procesy się zakończą
+        wait(NULL);
+    }
+
+    if(munmap(data, (N+4)*sizeof(int)) == -1) {
+        printf("Cannot detach shared memory\n");
+    }
 
     return 0;
 }
